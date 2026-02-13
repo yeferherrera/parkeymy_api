@@ -38,4 +38,10 @@ class Usuario extends Authenticatable
     public function incidentesResueltos() {
         return $this->hasMany(Incidente::class, 'id_usuario_resuelve', 'id_usuario');
     }
+
+    public function codigosQr()
+    {
+        return $this->hasMany(CodigoQr::class, 'id_usuario', 'id_usuario');
+    }
+
 }

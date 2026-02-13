@@ -7,13 +7,27 @@ use Illuminate\Http\Request;
 
 class ArticuloController extends Controller
 {
-    public function index()
-    {
+    public function index(Request $request)
+{
+    $user = $request->user(); // 👈 AQUÍ
+
+
+    // el admin puede ver todo
+    if ($user->rol->nombre === 'admin') {
         return response()->json(
             Articulo::with(['usuario','categoria','fotos'])->get(),
             200
         );
     }
+
+    // el aprendiz ve solo sus articulos
+    return response()->json(
+        Articulo::with(['usuario','categoria','fotos'])
+            ->where('id_usuario', $user->id_usuario)
+            ->get(),
+        200
+    );
+}
 
     public function store(Request $request)
     {

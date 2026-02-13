@@ -28,4 +28,19 @@ class Articulo extends Model
     public function movimientos() {
         return $this->hasMany(MovimientoArticulo::class, 'id_articulo', 'id_articulo');
     }
+
+    public function articuloqr() {
+        return $this->hasOne(ArticuloQr::class, 'id_articulo', 'id_articulo');
+    }
+
+    public function codigosQr()
+{
+    return $this->belongsToMany(
+        CodigoQr::class,
+        'articulo_qr',
+        'id_articulo',
+        'id_qr'
+    );
+}
+
 }
