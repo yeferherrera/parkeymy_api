@@ -44,4 +44,15 @@ class Usuario extends Authenticatable
         return $this->hasMany(CodigoQr::class, 'id_usuario', 'id_usuario');
     }
 
+    public function movimientos()
+    {
+        return $this->hasMany(Movimiento::class, 'id_usuario', 'id_usuario');
+    }
+    
+    public function movimientosVigilante()
+    {
+        return $this->hasMany(Movimiento::class, 'id_vigilante', 'id_usuario');
+
+    }
+
 }

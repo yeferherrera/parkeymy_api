@@ -25,6 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/generar-qr', [QrController::class, 'generar']);
     Route::get('/validar-qr/{codigo}', [QrController::class, 'validar']);
+    Route::middleware('auth:sanctum')->post('/ingreso/{codigo}', [QrController::class, 'registrarIngreso']);
+    Route::get('/articulos-fuera', [ArticuloController::class, 'fuera']);
+
     
     
 

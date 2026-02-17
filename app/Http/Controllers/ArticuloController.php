@@ -9,7 +9,7 @@ class ArticuloController extends Controller
 {
     public function index(Request $request)
 {
-    $user = $request->user(); // 👈 AQUÍ
+    $user = $request->user(); // Obtener el usuario autenticado
 
 
     // el admin puede ver todo
@@ -31,18 +31,22 @@ class ArticuloController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'id_usuario' => 'required|exists:usuarios,id_usuario',
-            'id_categoria' => 'required|exists:categorias_articulos,id_categoria',
-            'nombre' => 'required|string|max:100',
-            'descripcion' => 'nullable|string',
-            'estado' => 'required'
-        ]);
+         $request->validate([
+        'id_usuario' => 'required|exists:usuarios,id_usuario',
+        'id_categoria' => 'required|exists:categorias_articulos,id_categoria',
+        'nombre' => 'required|string|max:100',
+        'descripcion' => 'nullable|string',
+    ]);
 
-        return response()->json(
-            Articulo::create($request->all()),
-            201
-        );
+    $articulo = Articulo::create([
+        'id_usuario' => $request->id_usuario,
+        'id_categoria' => $request->id_categoria,
+        'nombre' => $request->nombre,
+        'descripcion' => $request->descripcion,
+        'estado_articulo' => 'registrado'
+    ]);
+
+    return response()->json($articulo, 201);
     }
 
     public function show($id)

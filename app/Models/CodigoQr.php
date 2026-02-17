@@ -13,6 +13,7 @@ class CodigoQr extends Model
     protected $fillable = [
         'id_usuario',
         'codigo_qr',
+        'tipo_movimiento',
         'tipo_qr',
         'fecha_generacion',
         'fecha_expiracion',
