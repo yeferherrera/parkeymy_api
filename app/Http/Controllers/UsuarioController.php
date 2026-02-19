@@ -8,39 +8,49 @@ use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
+    //  LISTAR
     public function index()
     {
         return response()->json(
             Usuario::with('rol')->get(),
             200
-        );//formato json para devolver todo junto con un tiempo de respuesta 200 
+        );
     }
 
+    //  CREAR USUARIO
     public function store(Request $request)
     {
         $request->validate([
+            'tipo_documento' => 'required|string|max:10',
+            'numero_documento' => 'required|string|max:20|unique:usuarios,numero_documento',
+            'nombres' => 'required|string|max:100',
+            'apellidos' => 'required|string|max:100',
+            'correo_institucional' => 'required|email|unique:usuarios,correo_institucional',
+            'telefono' => 'required|string|max:20',
+            'password' => 'required|string|min:8',
             'id_rol' => 'required|exists:roles,id_rol',
-            'nombre' => 'required|string|max:100',
-            'apellido' => 'required|string|max:100',
-            'correo' => 'required|email|unique:usuarios',
-            'password' => 'required|string|min:6',
-            'estado' => 'required',
-            'role' => 'required|in:admin,vigilante,aprendiz'
+            'estado' => 'required|string'
         ]);
 
         $usuario = Usuario::create([
+            'tipo_documento' => $request->tipo_documento,
+            'numero_documento' => $request->numero_documento,
+            'nombres' => $request->nombres,
+            'apellidos' => $request->apellidos,
+            'correo_institucional' => $request->correo_institucional,
+            'telefono' => $request->telefono,
+            'password_hash' => Hash::make($request->password),
             'id_rol' => $request->id_rol,
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
-            'correo' => $request->correo,
-            'password' => Hash::make($request->password),
+            'fecha_registro' => now(),
             'estado' => $request->estado,
-            'role' => $request->role
+            'intentos_fallidos' => 0,
+            'autenticacion_dos_pasos' => 0
         ]);
 
         return response()->json($usuario, 201);
     }
 
+    // 📌 MOSTRAR UNO
     public function show($id)
     {
         return response()->json(
@@ -49,29 +59,37 @@ class UsuarioController extends Controller
         );
     }
 
+    // 📌 ACTUALIZAR
     public function update(Request $request, $id)
     {
         $usuario = Usuario::findOrFail($id);
 
         $request->validate([
-            'id_rol' => 'exists:roles,id_rol',
-            'correo' => 'email|unique:usuarios,correo,' . $id . ',id_usuario'
+            'tipo_documento' => 'sometimes|string|max:10',
+            'numero_documento' => 'sometimes|string|max:20|unique:usuarios,numero_documento,' . $id . ',id_usuario',
+            'correo_institucional' => 'sometimes|email|unique:usuarios,correo_institucional,' . $id . ',id_usuario',
+            'id_rol' => 'sometimes|exists:roles,id_rol'
         ]);
 
-        if ($request->password) {
-            $request->merge([
-                'password' => Hash::make($request->password)
-            ]);
+        $data = $request->all();
+
+        //  Si envían password → hashear
+        if ($request->filled('password')) {
+            $data['password_hash'] = Hash::make($request->password);
         }
 
-        $usuario->update($request->all());
+        $usuario->update($data);
 
         return response()->json($usuario, 200);
     }
 
+    //  ELIMINAR
     public function destroy($id)
     {
         Usuario::findOrFail($id)->delete();
-        return response()->json(['message' => 'Usuario eliminado'], 200);
+
+        return response()->json([
+            'message' => 'Usuario eliminado'
+        ], 200);
     }
 }

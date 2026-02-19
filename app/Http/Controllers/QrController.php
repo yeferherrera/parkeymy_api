@@ -38,7 +38,7 @@ class QrController extends Controller
 
     //validar que un articulo no este fuera ya que no se pueden generar qr para articulos que ya estan fuera
 
-        foreach ($request->articulos as $idArticulo) {
+    foreach ($request->articulos as $idArticulo) {
 
     $articulo = Articulo::find($idArticulo);
 

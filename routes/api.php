@@ -11,7 +11,7 @@ use App\Http\Controllers\VisitanteController;
 use App\Http\Controllers\RegistroVisitanteController;
 use App\Http\Controllers\IncidenteController;
 use App\Http\Controllers\QrController;
-use App\Http\Controllers\CodigoQrController;
+
 
 //rutas publicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -19,39 +19,37 @@ Route::post('/login', [AuthController::class, 'login']);
 
 
 //rutas protegidas con sanctum
-Route::middleware('auth:sanctum')->group(function () {
 
+Route::middleware('auth:sanctum')->group(function () {
+    
+    
     Route::get('/perfil', [AuthController::class, 'perfil']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/generar-qr', [QrController::class, 'generar']);
-    Route::get('/validar-qr/{codigo}', [QrController::class, 'validar']);
-    Route::middleware('auth:sanctum')->post('/ingreso/{codigo}', [QrController::class, 'registrarIngreso']);
-    Route::get('/articulos-fuera', [ArticuloController::class, 'fuera']);
-
     
     
-
-    Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-
+   //solo admin puede gestionar usuarios y roles
+    Route::middleware('role:Administrador')->group(function () {
         Route::apiResource('usuarios', UsuarioController::class);
         Route::apiResource('roles', RolController::class);
-
     });
-   
-    Route::middleware(['auth:sanctum', 'role:admin,aprendiz'])->group(function () {
 
+    //admin y aprendiz 
+    Route::middleware('role:Administrador,Aprendiz')->group(function () {
+        Route::post('/generar-qr', [QrController::class, 'generar']);
         Route::apiResource('articulos', ArticuloController::class);
-
     });
-    
-    Route::middleware(['auth:sanctum', 'role:admin,vigilante'])->group(function () {
+
+   //admin y vigilante
+     
+    Route::middleware('role:Administrador,Vigilante')->group(function () {
+        Route::post('/ingreso/{codigo}', [QrController::class, 'registrarIngreso']);
+        Route::get('/validar-qr/{codigo}', [QrController::class, 'validar']);
+        Route::get('/articulos-fuera', [ArticuloController::class, 'fuera']);
 
         Route::apiResource('vehiculos', VehiculoController::class);
         Route::apiResource('visitantes', VisitanteController::class);
         Route::apiResource('registro-visitantes', RegistroVisitanteController::class);
         Route::apiResource('incidentes', IncidenteController::class);
-
     });
-
 
 });

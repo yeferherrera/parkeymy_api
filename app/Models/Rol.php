@@ -23,4 +23,6 @@ class Rol extends Model
             'id_permiso'
         );
     }
+
+    
 }

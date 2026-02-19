@@ -17,7 +17,7 @@ class RoleMiddleware
     }
 
     // Obtener nombre del rol desde la relación
-    $roleName = $user->rol->nombre ?? null;
+    $roleName = $user->rol->nombre_rol?? null;
 
     if (!in_array($roleName, $roles)) {
         return response()->json(['message' => 'No autorizado'], 403);
