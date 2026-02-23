@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:Administrador,Aprendiz')->group(function () {
         Route::post('/generar-qr', [QrController::class, 'generar']);
         Route::apiResource('articulos', ArticuloController::class);
+        Route::get('/mis-articulos', [ArticuloController::class, 'misArticulos']);
     });
 
    //admin y vigilante

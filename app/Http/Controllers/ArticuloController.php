@@ -57,6 +57,19 @@ class ArticuloController extends Controller
         );
     }
 
+    public function misArticulos(Request $request)
+{
+    $user = $request->user();
+
+    $articulos = Articulo::with(['usuario','categoria','fotos'])
+        ->where('id_usuario', $user->id_usuario)
+        ->get();
+
+    return response()->json($articulos, 200);
+}
+
+
+
     public function update(Request $request, $id)
     {
         $articulo = Articulo::findOrFail($id);
