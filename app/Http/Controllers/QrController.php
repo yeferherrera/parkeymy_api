@@ -72,7 +72,7 @@ class QrController extends Controller
             'tipo_movimiento' => $request->tipo_movimiento,
             'tipo_qr' => count($request->articulos) > 1 ? 'multiple' : 'individual',
             'fecha_generacion' => now(),
-            'fecha_expiracion' => now()->addHours(2),
+            'fecha_expiracion' => now()->addMinutes(1),
             'cantidad_articulos' => count($request->articulos),
             'estado_qr' => 'activo'
         ]);

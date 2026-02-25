@@ -30,24 +30,30 @@ class ArticuloController extends Controller
 }
 
     public function store(Request $request)
-    {
-         $request->validate([
-        'id_usuario' => 'required|exists:usuarios,id_usuario',
+{
+    $request->validate([
         'id_categoria' => 'required|exists:categorias_articulos,id_categoria',
         'nombre' => 'required|string|max:100',
         'descripcion' => 'nullable|string',
     ]);
 
     $articulo = Articulo::create([
-        'id_usuario' => $request->id_usuario,
+        'id_articulo' => uniqid('articulo_'),
+        'id_usuario' => $request->user()->id_usuario,
         'id_categoria' => $request->id_categoria,
-        'nombre' => $request->nombre,
+        'nombre_articulo' => $request->nombre,
         'descripcion' => $request->descripcion,
+        'numero_serie' => $request->numero_serie,
+        'marca' => $request->marca,
+        'modelo' => $request->modelo,
+        'color' => $request->color, 
+        'fecha_registro' => now(),
+        'observaciones' => $request->observaciones,
         'estado_articulo' => 'registrado'
     ]);
 
     return response()->json($articulo, 201);
-    }
+}
 
     public function show($id)
     {

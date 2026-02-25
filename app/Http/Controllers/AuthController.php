@@ -12,34 +12,35 @@ class AuthController extends Controller
      * LOGIN
      */
     public function login(Request $request)
-    {
-        $request->validate([
-            'correo_institucional' => 'required|email',
-            'password' => 'required|string'
-        ]);
+{
+    $request->validate([
+        'usuario' => 'required',
+        'password' => 'required'
+    ]);
 
-        $usuario = Usuario::where('correo_institucional', $request->correo_institucional)->first();
+    $usuarioInput = $request->usuario;
 
-        if (!$usuario || !Hash::check($request->password, $usuario->password_hash)) {
-            return response()->json([
-                'message' => 'Credenciales incorrectas'
-            ], 401);
-        }
-
-        if ($usuario->estado !== 'activo') {
-            return response()->json([
-                'message' => 'Usuario inactivo'
-            ], 403);
-        }
-
-        $token = $usuario->createToken('parkeymy_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login exitoso',
-            'token' => $token,
-            'usuario' => $usuario->load('rol')
-        ], 200);
+    // detectar si es correo o documento
+    if (filter_var($usuarioInput, FILTER_VALIDATE_EMAIL)) {
+        $usuario = Usuario::where('correo_institucional', $usuarioInput)->first();
+    } else {
+        $usuario = Usuario::where('numero_documento', $usuarioInput)->first();
     }
+
+    if (!$usuario || !Hash::check($request->password, $usuario->password_hash)) {
+        return response()->json([
+            'message' => 'Credenciales incorrectas'
+        ], 401);
+    }
+
+    $token = $usuario->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'token' => $token,
+        'usuario' => $usuario
+    ]);
+}
+
 
     /**
      * PERFIL

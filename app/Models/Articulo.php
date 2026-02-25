@@ -10,7 +10,7 @@ class Articulo extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id_usuario','id_categoria','nombre','descripcion','estado_articulo'
+        'id_usuario','id_categoria','nombre_articulo','descripcion','estado_articulo','numero_serie','marca','modelo','color','fecha_registro','observaciones'
     ];
 
     public function usuario() {
