@@ -18,6 +18,16 @@ class MovimientoController extends Controller
 
         return response()->json($movimientos);
     }
+    // 📋 Listar movimientos del usuario autenticado
+    public function misMovimientos(Request $request)
+{
+    $movimientos = Movimiento::with(['codigoQr.articulos', 'vigilante'])
+        ->where('id_usuario', $request->user()->id_usuario)
+        ->orderBy('fecha', 'desc')
+        ->paginate(15);
+
+    return response()->json($movimientos);
+}
 
     // ➕ Crear movimiento
     public function store(Request $request)

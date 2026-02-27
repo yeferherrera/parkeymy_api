@@ -89,4 +89,15 @@ class ArticuloController extends Controller
         Articulo::findOrFail($id)->delete();
         return response()->json(['message' => 'Artículo eliminado'], 200);
     }
+
+    //  Auditoría de mis artículos, para poder tener un historial de cambios
+    public function miAuditoria(Request $request)
+{
+    $auditoria = \App\Models\AuditoriaSistema::where('tabla_afectada', 'articulos')
+        ->where('id_usuario', $request->user()->id_usuario)
+        ->orderBy('fecha_hora', 'desc')
+        ->get();
+
+    return response()->json($auditoria);
+}
 }

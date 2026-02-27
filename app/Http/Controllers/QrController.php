@@ -9,20 +9,20 @@ use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\Movimiento;
 use App\Models\Articulo;
-
-
+use App\Models\Notificacion;
 
 class QrController extends Controller
 {
     public function generar(Request $request)
     {
         $user = $request->user();
-        //validar si hay un qr existente
+
+        // Validar si hay un qr existente
         $qrActivo = CodigoQr::where('id_usuario', $user->id_usuario)
             ->where('estado_qr', 'activo')
-            ->where('fecha_expiracion', '>', now()) 
+            ->where('fecha_expiracion', '>', now())
             ->exists();
-    
+
         if ($qrActivo) {
             return response()->json([
                 'message' => 'Ya tiene un QR activo'
@@ -30,37 +30,32 @@ class QrController extends Controller
         }
 
         // Validar artículos
-       $request->validate([
-    'articulos' => 'required|array',
-    'articulos.*' => 'exists:articulos,id_articulo',
-    'tipo_movimiento' => 'required|in:ingreso,salida'
-]);
+        $request->validate([
+            'articulos' => 'required|array',
+            'articulos.*' => 'exists:articulos,id_articulo',
+            'tipo_movimiento' => 'required|in:ingreso,salida'
+        ]);
 
-    //validar que un articulo no este fuera ya que no se pueden generar qr para articulos que ya estan fuera
+        // Validar que un artículo no esté fuera
+        foreach ($request->articulos as $idArticulo) {
+            $articulo = Articulo::find($idArticulo);
 
-    foreach ($request->articulos as $idArticulo) {
+            // Si es SALIDA → debe estar en_sede
+            if ($request->tipo_movimiento === 'salida'
+                && $articulo->estado_articulo !== 'en_sede') {
+                return response()->json([
+                    'message' => 'El artículo no está dentro del complejo'
+                ], 400);
+            }
 
-    $articulo = Articulo::find($idArticulo);
-
-    // Si es SALIDA → debe estar en_sede
-    if ($request->tipo_movimiento === 'salida' 
-        && $articulo->estado_articulo !== 'en_sede') {
-
-        return response()->json([
-            'message' => 'El artículo no está dentro del complejo'
-        ], 400);
-    }
-
-    // Si es INGRESO → debe estar registrado o retirado
-    if ($request->tipo_movimiento === 'ingreso' 
-        && !in_array($articulo->estado_articulo, ['registrado','retirado'])) {
-
-        return response()->json([
-            'message' => 'El artículo ya está dentro o no puede ingresar'
-        ], 400);
-    }
-}
-
+            // Si es INGRESO → debe estar registrado o retirado
+            if ($request->tipo_movimiento === 'ingreso'
+                && !in_array($articulo->estado_articulo, ['registrado', 'retirado'])) {
+                return response()->json([
+                    'message' => 'El artículo ya está dentro o no puede ingresar'
+                ], 400);
+            }
+        }
 
         // 1️⃣ Generar UUID
         $codigo = (string) Str::uuid();
@@ -85,20 +80,27 @@ class QrController extends Controller
             ]);
         }
 
-        // 4️⃣ Generar imagen QR usando GD (SIN IMAGICK)
+        // 4️⃣ Generar imagen QR
         $nombreArchivo = $codigo . '.svg';
         $ruta = public_path('qrcodes/' . $nombreArchivo);
 
-       $qrImage = QrCode::format('svg')
-        ->size(300)
-         ->generate($codigo);
+        $qrImage = QrCode::format('svg')
+            ->size(300)
+            ->generate($codigo);
 
         file_put_contents($ruta, $qrImage);
 
+        // 5️⃣ Crear notificación
+        Notificacion::create([
+            'id_usuario' => $user->id_usuario,
+            'tipo_notificacion' => 'articulo',
+            'titulo' => 'QR generado',
+            'mensaje' => 'Tu QR de ' . $request->tipo_movimiento . ' fue generado y expira en 2 horas. No olvides hacer el QR de salida al retirarte.',
+            'fecha_envio' => now(),
+            'leida' => 0
+        ]);
 
-
-
-        // 5️⃣ Respuesta final
+        // 6️⃣ Respuesta final
         return response()->json([
             'message' => 'Código QR generado correctamente',
             'qr_id' => $codigoQr->id_qr,
@@ -107,74 +109,73 @@ class QrController extends Controller
         ]);
     }
 
-   public function validar(Request $request, $codigo)
-{
-    $vigilante = $request->user();
+    public function validar(Request $request, $codigo)
+    {
+        $vigilante = $request->user();
 
-    $qr = CodigoQr::with('articulos')
-        ->where('codigo_qr', $codigo)
-        ->where('estado_qr', 'activo')
-        ->where('fecha_expiracion', '>', now())
-        ->first();
+        $qr = CodigoQr::with('articulos')
+            ->where('codigo_qr', $codigo)
+            ->where('estado_qr', 'activo')
+            ->where('fecha_expiracion', '>', now())
+            ->first();
 
-    if (!$qr) {
+        if (!$qr) {
+            return response()->json([
+                'message' => 'QR inválido o expirado'
+            ], 404);
+        }
+
+        // Cambiar estado de artículos según tipo
+        foreach ($qr->articulos as $articulo) {
+            if ($qr->tipo_movimiento === 'ingreso') {
+                $articulo->update([
+                    'estado_articulo' => 'en_sede'
+                ]);
+            }
+
+            if ($qr->tipo_movimiento === 'salida') {
+                $articulo->update([
+                    'estado_articulo' => 'retirado'
+                ]);
+            }
+        }
+
+        // Registrar movimiento
+        Movimiento::create([
+            'id_usuario' => $qr->id_usuario,
+            'id_qr' => $qr->id_qr,
+            'tipo_movimiento' => $qr->tipo_movimiento,
+            'fecha' => now(),
+            'id_vigilante' => $vigilante->id_usuario
+        ]);
+
+        // Marcar QR como usado
+        $qr->update([
+            'estado_qr' => 'usado',
+            'id_vigilante' => $vigilante->id_usuario,
+            'fecha_validacion' => now()
+        ]);
+
+        // Crear notificación
+        Notificacion::create([
+            'id_usuario' => $qr->id_usuario,
+            'tipo_notificacion' => 'articulo',
+            'titulo' => $qr->tipo_movimiento === 'ingreso' ? '✅ Ingreso registrado' : '✅ Salida registrada',
+            'mensaje' => 'Tu ' . $qr->tipo_movimiento . ' fue validado correctamente por el vigilante.',
+            'fecha_envio' => now(),
+            'leida' => 0
+        ]);
+
         return response()->json([
-            'message' => 'QR inválido o expirado'
-        ], 404);
-    }
-
-    // Cambiar estado de artículos según tipo
-   foreach ($qr->articulos as $articulo) {
-
-    if ($qr->tipo_movimiento === 'ingreso') {
-
-        $articulo->update([
-            'estado_articulo' => 'en_sede'
+            'message' => 'Movimiento registrado correctamente',
+            'tipo' => $qr->tipo_movimiento
         ]);
     }
 
-    if ($qr->tipo_movimiento === 'salida') {
+    public function fuera()
+    {
+        $articulos = Articulo::where('estado_articulo', 'retirado')->get();
 
-        $articulo->update([
-            'estado_articulo' => 'retirado'
-        ]);
+        return response()->json($articulos);
     }
-}
-
-
-    // Registrar movimiento
-    Movimiento::create([
-        'id_usuario' => $qr->id_usuario,
-        'id_qr' => $qr->id_qr,
-        'tipo_movimiento' => $qr->tipo_movimiento,
-        'fecha' => now(),
-        'id_vigilante' => $vigilante->id_usuario
-    ]);
-
-    // Marcar QR como usado
-    $qr->update([
-        'estado_qr' => 'usado',
-        'id_vigilante' => $vigilante->id_usuario,
-        'fecha_validacion' => now()
-    ]);
-
-    return response()->json([
-        'message' => 'Movimiento registrado correctamente',
-        'tipo' => $qr->tipo_movimiento
-    ]);
-}
-
-
-
-public function fuera()
-{
-    $articulos = Articulo::where('estado_articulo', 'retirado')->get();
-
-    return response()->json($articulos);
-}
-
-
-
-
-
 }

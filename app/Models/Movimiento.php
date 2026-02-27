@@ -42,4 +42,9 @@ class Movimiento extends Model
     {
         return $this->belongsTo(Usuario::class, 'id_vigilante', 'id_usuario');
     }
+
+    public function notificaciones()
+    {
+        return $this->hasMany(Notificacion::class, 'id_movimiento', 'id_movimiento');
+    }
 }

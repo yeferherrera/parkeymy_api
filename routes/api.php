@@ -11,6 +11,8 @@ use App\Http\Controllers\VisitanteController;
 use App\Http\Controllers\RegistroVisitanteController;
 use App\Http\Controllers\IncidenteController;
 use App\Http\Controllers\QrController;
+use App\Http\Controllers\MovimientoController;
+use App\Http\Controllers\NotificacionController;
 
 
 //rutas publicas
@@ -25,6 +27,11 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/perfil', [AuthController::class, 'perfil']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/notificaciones', [NotificacionController::class, 'index']);
+    Route::get('/notificaciones/sin-leer', [NotificacionController::class, 'sinLeer']);
+    Route::post('/notificaciones/{id}/leer', [NotificacionController::class, 'marcarLeida']);
+    Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasLeidas']);
     
     
    //solo admin puede gestionar usuarios y roles
@@ -38,6 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/generar-qr', [QrController::class, 'generar']);
         Route::apiResource('articulos', ArticuloController::class);
         Route::get('/mis-articulos', [ArticuloController::class, 'misArticulos']);
+        Route::get('/mis-movimientos', [MovimientoController::class, 'misMovimientos']);
+        Route::apiResource('movimientos', MovimientoController::class);
+        Route::get('/mi-auditoria', [ArticuloController::class, 'miAuditoria']);
     });
 
    //admin y vigilante

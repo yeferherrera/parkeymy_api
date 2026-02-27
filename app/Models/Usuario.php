@@ -31,17 +31,18 @@ class Usuario extends Authenticatable
         return $this->hasMany(Vehiculo::class, 'id_usuario', 'id_usuario');
     }
 
-    public function incidentesReportados() {
-        return $this->hasMany(Incidente::class, 'id_usuario_reporta', 'id_usuario');
+    public function notificaciones() {
+        return $this->hasMany(Notificacion::class, 'id_usuario', 'id_usuario');
     }
-
-    public function incidentesResueltos() {
-        return $this->hasMany(Incidente::class, 'id_usuario_resuelve', 'id_usuario');
-    }
-
+    
     public function codigosQr()
     {
         return $this->hasMany(CodigoQr::class, 'id_usuario', 'id_usuario');
+    }
+    
+    public function AuditoriaSistema()
+    {
+        return $this->hasMany(AuditoriaSistema::class, 'id_usuario', 'id_usuario');
     }
 
     public function movimientos()
