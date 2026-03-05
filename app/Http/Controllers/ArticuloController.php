@@ -37,19 +37,28 @@ class ArticuloController extends Controller
         'descripcion' => 'nullable|string',
     ]);
 
+    // ✅ Validar cupo máximo de 5 artículos
+    $totalArticulos = Articulo::where('id_usuario', $request->user()->id_usuario)->count();
+
+    if ($totalArticulos >= 5) {
+        return response()->json([
+            'message' => 'Has alcanzado el límite máximo de 5 artículos registrados.'
+        ], 422);
+    }
+
     $articulo = Articulo::create([
-        'id_articulo' => uniqid('articulo_'),
-        'id_usuario' => $request->user()->id_usuario,
-        'id_categoria' => $request->id_categoria,
-        'nombre_articulo' => $request->nombre,
-        'descripcion' => $request->descripcion,
-        'numero_serie' => $request->numero_serie,
-        'marca' => $request->marca,
-        'modelo' => $request->modelo,
-        'color' => $request->color, 
+        'id_articulo'    => uniqid('articulo_'),
+        'id_usuario'     => $request->user()->id_usuario,
+        'id_categoria'   => $request->id_categoria,
+        'nombre_articulo'=> $request->nombre,
+        'descripcion'    => $request->descripcion,
+        'numero_serie'   => $request->numero_serie,
+        'marca'          => $request->marca,
+        'modelo'         => $request->modelo,
+        'color'          => $request->color,
         'fecha_registro' => now(),
-        'observaciones' => $request->observaciones,
-        'estado_articulo' => 'registrado'
+        'observaciones'  => $request->observaciones,
+        'estado_articulo'=> 'registrado'
     ]);
 
     return response()->json($articulo, 201);

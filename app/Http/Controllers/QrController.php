@@ -109,6 +109,33 @@ class QrController extends Controller
         ]);
     }
 
+    public function preview(Request $request, $codigo)
+{
+    $qr = CodigoQr::with('articulos')
+        ->where('codigo_qr', $codigo)
+        ->where('estado_qr', 'activo')
+        ->where('fecha_expiracion', '>', now())
+        ->first();
+
+    if (!$qr) {
+        return response()->json([
+            'message' => 'QR inválido o expirado'
+        ], 404);
+    }
+
+    return response()->json([
+        'tipo_movimiento' => $qr->tipo_movimiento,
+        'articulos' => $qr->articulos->map(fn($a) => [
+            'id' => $a->id_articulo,
+            'nombre' => $a->nombre_articulo,
+            'descripcion' => $a->descripcion,
+            'estado_actual' => $a->estado_articulo,
+        ]),
+        'expira_en' => $qr->fecha_expiracion,
+    ]);
+    
+}
+
     public function validar(Request $request, $codigo)
     {
         $vigilante = $request->user();

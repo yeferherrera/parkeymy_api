@@ -14,8 +14,22 @@ class Usuario extends Authenticatable
     public $timestamps = false;
 
     protected $fillable = [
-        'id_rol','nombre','apellido','correo','password','estado'
-    ];
+    'id_rol',
+    'tipo_documento',
+    'numero_documento',
+    'nombres',
+    'apellidos',
+    'correo_institucional',
+    'telefono',
+    'password_hash',
+    'estado',
+    'intentos_fallidos',
+    'autenticacion_dos_pasos',
+    'codigo_2fa',
+    'codigo_2fa_expira',
+    'fecha_registro',
+    'ultimo_acceso',
+];
 
     protected $hidden = ['password_hash'];
 
