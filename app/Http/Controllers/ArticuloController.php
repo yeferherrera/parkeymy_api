@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Articulo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ArticuloController extends Controller
 {
@@ -63,6 +65,48 @@ class ArticuloController extends Controller
 
     return response()->json($articulo, 201);
 }
+public function subirFoto(Request $request, $id)
+{
+    $request->validate([
+        'foto' => 'required|string',
+    ]);
+
+    $articulo = Articulo::where('id_articulo', $id)
+        ->where('id_usuario', $request->user()->id_usuario)
+        ->firstOrFail();
+
+    $base64 = $request->foto;
+    if (str_contains($base64, ',')) {
+        $base64 = explode(',', $base64)[1];
+    }
+
+    $decoded = base64_decode($base64);
+    $filename = 'articulo_' . $id . '_' . time() . '.jpg';
+    $path = 'fotos_articulos/' . $filename;
+
+    Storage::disk('public')->put($path, $decoded);
+
+    // Eliminar foto anterior
+    $fotoAnterior = DB::table('fotos_articulos')->where('id_articulo', $id)->first();
+    if ($fotoAnterior) {
+        $rutaVieja = str_replace(asset('storage/'), '', $fotoAnterior->ruta_foto);
+        Storage::disk('public')->delete($rutaVieja);
+        DB::table('fotos_articulos')->where('id_articulo', $id)->delete();
+    }
+
+    DB::table('fotos_articulos')->insert([
+        'id_articulo'  => $id,
+        'ruta_foto'    => asset('storage/' . $path),
+        'es_principal' => 1,
+        'fecha_subida' => now(),
+    ]);
+
+    return response()->json([
+        'message'   => 'Foto guardada correctamente',
+        'ruta_foto' => asset('storage/' . $path),
+    ]);
+}
+
 
     public function show($id)
     {

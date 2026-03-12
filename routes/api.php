@@ -6,10 +6,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\ArticuloController;
-use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\VisitanteController;
 use App\Http\Controllers\RegistroVisitanteController;
-use App\Http\Controllers\IncidenteController;
 use App\Http\Controllers\QrController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\NotificacionController;
@@ -29,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/perfil', [AuthController::class, 'perfil']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/articulos/{id}/foto', [ArticuloController::class, 'subirFoto']);
 
     Route::get('/notificaciones', [NotificacionController::class, 'index']);
     Route::get('/notificaciones/sin-leer', [NotificacionController::class, 'sinLeer']);
@@ -71,11 +70,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reportes-vigilancia/{id}', [ReporteVigilanciaController::class, 'show']);
         Route::post('/reportes-vigilancia/calcular', [ReporteVigilanciaController::class, 'calcularTotales']);
         Route::post('/reportes-vigilancia', [ReporteVigilanciaController::class, 'store']);
+        Route::get('/visitantes', [VisitanteController::class, 'index']);
+        Route::get('/visitantes/{id}', [VisitanteController::class, 'show']);
+        Route::post('/visitantes', [VisitanteController::class, 'store']);
+        Route::post('/visitantes/{id}/salida', [VisitanteController::class, 'registrarSalida']);
+        Route::post('/visitantes/{id}/objetos', [VisitanteController::class, 'agregarObjetos']);
 });
         
-
-        Route::apiResource('vehiculos', VehiculoController::class);
-        Route::apiResource('visitantes', VisitanteController::class);
-        Route::apiResource('incidentes', IncidenteController::class);
     });
 

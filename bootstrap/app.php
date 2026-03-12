@@ -16,7 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'role' => RoleMiddleware::class,
     ]);
+
+    $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
 })
-    ->withExceptions(function (Exceptions $exceptions): void {
+//     ->withMiddleware(function (Middleware $middleware) {
+//     $middleware->alias([
+//         'role' => RoleMiddleware::class,
+//     ]);
+// })
+//     
+->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

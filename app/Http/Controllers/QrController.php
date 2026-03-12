@@ -109,7 +109,7 @@ class QrController extends Controller
         ]);
     }
 
-    public function preview(Request $request, $codigo)
+   public function preview(Request $request, $codigo)
 {
     $qr = CodigoQr::with('articulos')
         ->where('codigo_qr', $codigo)
@@ -125,17 +125,18 @@ class QrController extends Controller
 
     return response()->json([
         'tipo_movimiento' => $qr->tipo_movimiento,
-        'articulos' => $qr->articulos->map(fn($a) => [
-            'id' => $a->id_articulo,
-            'nombre' => $a->nombre_articulo,
-            'descripcion' => $a->descripcion,
+        'articulos'       => $qr->articulos->map(fn($a) => [
+            'id'           => $a->id_articulo,
+            'nombre'       => $a->nombre_articulo,
+            'descripcion'  => $a->descripcion,
             'estado_actual' => $a->estado_articulo,
+            'foto_url'     => DB::table('fotos_articulos')
+                                ->where('id_articulo', $a->id_articulo)
+                                ->value('ruta_foto'),
         ]),
-        'expira_en' => $qr->fecha_expiracion,
+        'expira_en'       => $qr->fecha_expiracion,
     ]);
-    
 }
-
     public function validar(Request $request, $codigo)
     {
         $vigilante = $request->user();
