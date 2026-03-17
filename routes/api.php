@@ -15,16 +15,12 @@ use App\Http\Controllers\ReporteAprendizController;
 use App\Http\Controllers\ReporteVigilanciaController;
 
 
-//rutas publicas
+// rutas publicas
 Route::post('/login', [AuthController::class, 'login']);
 
-
-
-//rutas protegidas con sanctum
-
+// rutas protegidas con sanctum
 Route::middleware('auth:sanctum')->group(function () {
-    
-    
+
     Route::get('/perfil', [AuthController::class, 'perfil']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/articulos/{id}/foto', [ArticuloController::class, 'subirFoto']);
@@ -36,16 +32,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/perfil', [AuthController::class, 'actualizarPerfil']);
     Route::post('/solicitar-cambio-password', [AuthController::class, 'solicitarCambioPassword']);
     Route::post('/cambiar-password', [AuthController::class, 'cambiarPassword']);
-    
-    
-   //solo admin puede gestionar usuarios y roles
+
+    // solo admin puede gestionar usuarios y roles
     Route::middleware('role:Administrador')->group(function () {
         Route::apiResource('usuarios', UsuarioController::class);
         Route::apiResource('roles', RolController::class);
     });
 
-    //admin y aprendiz 
-    Route::middleware('role:Administrador,Aprendiz')->group(function () {
+    // admin, aprendiz e instructor — acceso idéntico
+    Route::middleware('role:Administrador,Aprendiz,Instructor')->group(function () {
         Route::post('/generar-qr', [QrController::class, 'generar']);
         Route::apiResource('articulos', ArticuloController::class);
         Route::get('/mis-articulos', [ArticuloController::class, 'misArticulos']);
@@ -57,8 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reportes', [ReporteAprendizController::class, 'store']);
     });
 
-   //admin y vigilante
-     
+    // admin y vigilante
     Route::middleware('role:Administrador,Vigilante')->group(function () {
         Route::post('/ingreso/{codigo}', [QrController::class, 'registrarIngreso']);
         Route::get('/qr/{codigo}/preview', [QrController::class, 'preview']);
@@ -75,7 +69,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/visitantes', [VisitanteController::class, 'store']);
         Route::post('/visitantes/{id}/salida', [VisitanteController::class, 'registrarSalida']);
         Route::post('/visitantes/{id}/objetos', [VisitanteController::class, 'agregarObjetos']);
-});
-        
     });
-
+});
